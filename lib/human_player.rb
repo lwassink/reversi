@@ -1,5 +1,4 @@
 require_relative 'player'
-require_relative 'board'
 
 class HumanPlayer < Player
   def get_move(board)
@@ -16,8 +15,7 @@ class HumanPlayer < Player
 
   def request_move
     print "Please enter a move (i.e. 1, 2 or 8,8): "
-    coords = parse_pos(gets.chomp)
-    Board.pos(coords)
+    parse_coords(gets.chomp)
   end
 
   def request_valid_move
@@ -26,8 +24,7 @@ class HumanPlayer < Player
     Board.pos(coords)
   end
 
-  def parse_pos(move)
-    move.split(",").reverse.map { |word| word.to_i - 1 }
+  def parse_coords(move)
+    move.split(",").map { |word| word.to_i - 1 }
   end
 end
-
