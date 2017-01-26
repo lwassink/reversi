@@ -1,6 +1,6 @@
 require_relative 'human_player'
 require_relative 'ai'
-require_relative 'ab-ai'
+require_relative 'ai'
 require_relative 'board'
 
 class Game
@@ -66,8 +66,9 @@ class Game
 end
 
 if __FILE__ == $PROGRAM_NAME
-  player1 = ABAIPlayer.new(:w, 4)
-  player2 = ABAIPlayer.new(:b, 4)
+  # player1 = AIPlayer.new(:w, 4)
+  player1 = HumanPlayer.new(:w)
+  player2 = AIPlayer.new(:b, 6)
 
   grid = Array.new(64, :w)
   grid[9] = :b
