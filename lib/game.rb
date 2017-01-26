@@ -2,6 +2,7 @@ require_relative 'human_player'
 require_relative 'ai'
 require_relative 'ai'
 require_relative 'board'
+require 'byebug'
 
 class Game
   def initialize(player1, player2, board)
@@ -22,18 +23,18 @@ class Game
   private
 
   def display_state
-    system("clear")
+    # system("clear")
     puts
     puts @board.to_s
     puts
     puts "It's the #{current_player} player's turn."
-    puts
   end
 
   def make_move
     pos = current_player.get_move(@board)
     @board.move(current_player.color, pos)
     switch_players! if @board.can_move?(other_player.color)
+    @board.refresh_valid_moves
   end
 
   def current_player
@@ -67,8 +68,9 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   # player1 = AIPlayer.new(:w, 4)
-  player1 = HumanPlayer.new(:w)
-  player2 = AIPlayer.new(:b, 6)
+  move_limit = 5
+  player1 = AIPlayer.new(:w, move_limit)
+  player2 = AIPlayer.new(:b, move_limit)
 
   grid = Array.new(64, :w)
   grid[9] = :b

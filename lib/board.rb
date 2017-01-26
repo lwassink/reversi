@@ -145,6 +145,10 @@ class Board
     [pos1[0] + pos2[0],
      pos1[1] + pos2[1]]
   end
+
+  def refresh_valid_moves
+    @valid_moves = { w: nil, b: nil }
+  end
 end
 
 if __FILE__ == $PROGRAM_NAME

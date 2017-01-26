@@ -27,6 +27,20 @@ context "Board" do
     Board.new(grid)
   end
 
+  let(:two_three_rows) do
+    grid = [
+      nil, nil, nil, nil, nil, nil, nil, nil,
+      nil, nil, nil, nil, nil, nil, nil, nil,
+      nil, nil, nil, nil, nil, nil, nil, nil,
+      nil, nil, nil, :w, :b, nil, nil, nil,
+      nil, nil, nil, :w, :b, nil, nil, nil,
+      nil, nil, nil, :w, :b, nil, nil, nil,
+      nil, nil, nil, nil, nil, nil, nil, nil,
+      nil, nil, nil, nil, nil, nil, nil, nil
+    ]
+    Board.new(grid)
+  end
+
   describe "::pos" do
     it "correctly calculates a pos from coords" do
       expect(Board.pos([1,2])).to be(10)
@@ -66,6 +80,10 @@ context "Board" do
     it "doesn't allow wrapping captures" do
       expect(over_but_not_full.valid_move?(:b, [1, 0])).to be_falsey
       expect(over_but_not_full.valid_move?(:w, [2, 6])).to be_falsey
+    end
+
+    it "doesn't allow captures of it's own color" do
+      expect(two_three_rows.valid_move?(:w, [4, 2])).to be(false)
     end
   end
 

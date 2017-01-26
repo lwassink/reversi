@@ -9,8 +9,9 @@ Player#get_move must return a number from 0 through 63; the position where they 
 
 # Plan:
 
-* Lazy evaluation of valid_moves
+* Lazy evaluation and caching of valid_moves
   * Doubled speed
+  * Caching other methods(valid_move? and captured_positions) show no improvement
 * Don't switch if the other player can't move
 * End the game at the correct time
 * High leaf_value for a winning position (and low one for a loosing position)

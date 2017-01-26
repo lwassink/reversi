@@ -54,57 +54,42 @@ class RNode
   def minimax(options)
     default_options = {
       level: 0,
-      max: true
-    }
-    options = default_options.merge(options)
-
-    if options[:level] < options[:max_level] &&
-      @board.can_move?(options[:color])
-      @board.valid_moves(options[:color]).each do |pmove|
-        pboard = @board.dup
-        pboard.move(options[:color], pmove)
-        self.add_child(RNode.new(pboard))
-        @children.last.minimax(
-          level: options[:level] + 1,
-          max: !options[:max],
-          max_level: options[:max_level],
-          color: Board.other_color(options[:color])
-        )
-      end
-
-      values = @children.map(&:value)
-      @value = options[:max] ? values.max : values.min
-    else
-      @value = self.leaf_value(options[:color], options[:level])
-    end
-  end
-
-  def ab_minimax(options)
-    default_options = {
-      level: 0,
       max: true,
       alpha: -65,
       beta: 65
     }
     options = default_options.merge(options)
 
-    if options[:level] < options[:max_level] &&
+    if (options[:level] < options[:max_level]) &&
       @board.can_move?(options[:color])
       @board.valid_moves(options[:color]).each do |pmove|
+        # create child node for possible move
         pboard = @board.dup
         pboard.move(options[:color], pmove)
         child = RNode.new(pboard)
         self.add_child(child)
 
-        child.ab_minimax(
+        child_options = {
           level: options[:level] + 1,
-          max: !options[:max],
           max_level: options[:max_level],
-          color: Board.other_color(options[:color]),
           alpha: options[:alpha],
           beta: options[:beta]
-        )
+        }
+        child_options[:color] = Board.other_color(options[:color])
+        child_options[:max] = !options[:max]
 
+        # only switch if other player can move
+        # if pboard.can_move?(Board.other_color(options[:color]))
+        #   child_options[:color] = Board.other_color(options[:color])
+        #   child_options[:max] = !options[:max]
+        # else
+        #   child_options[:color] = options[:color]
+        #   child_options[:max] = options[:max]
+        # end
+
+        child.minimax(child_options)
+
+        # update alpha or beta based on child values
         if options[:max]
           options[:alpha] = [options[:alpha], child.value].max
         else
@@ -114,9 +99,11 @@ class RNode
         break if options[:alpha] >= options[:beta]
       end
 
+      # calculate value based on child values
       values = @children.map(&:value)
       @value = options[:max] ? values.max : values.min
     else
+      # value of leaf determined by leaf_value
       @value = self.leaf_value(options[:color], options[:level])
     end
   end
@@ -141,21 +128,15 @@ end
 if __FILE__ == $PROGRAM_NAME
   board = Board.new
   board.move(:w, [2, 4])
-  ab_board = board.dup
-
   node = RNode.new(board)
-  ab_node = RNode.new(ab_board)
 
   Benchmark.bm do |x|
     x.report { node.minimax(color: :b, max_level: 5) }
-    x.report { ab_node.ab_minimax(color: :b, max_level: 5) }
     x.report { node.minimax(color: :b, max_level: 6) }
-    x.report { ab_node.ab_minimax(color: :b, max_level: 6) }
-    x.report { ab_node.ab_minimax(color: :b, max_level: 7) }
-    x.report { ab_node.ab_minimax(color: :b, max_level: 8) }
-    # x.report { node.minimax(color: :b, max_level: 8) }
+    x.report { node.minimax(color: :b, max_level: 7) }
+    x.report { node.minimax(color: :b, max_level: 8) }
+    # x.report { node.minimax(color: :b, max_level: 9) }
   end
 
   # node.children.each { |child| puts child.to_s }
-  # ab_node.children.each { |child| puts child.to_s }
 end
