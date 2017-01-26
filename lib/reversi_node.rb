@@ -149,13 +149,13 @@ if __FILE__ == $PROGRAM_NAME
   Benchmark.bm do |x|
     x.report { node.minimax(color: :b, max_level: 5) }
     x.report { ab_node.ab_minimax(color: :b, max_level: 5) }
-    # x.report { node.minimax(color: :b, max_level: 6) }
-    # x.report { ab_node.ab_minimax(color: :b, max_level: 6) }
-    # x.report { ab_node.ab_minimax(color: :b, max_level: 7) }
-    # x.report { ab_node.ab_minimax(color: :b, max_level: 8) }
+    x.report { node.minimax(color: :b, max_level: 6) }
+    x.report { ab_node.ab_minimax(color: :b, max_level: 6) }
+    x.report { ab_node.ab_minimax(color: :b, max_level: 7) }
+    x.report { ab_node.ab_minimax(color: :b, max_level: 8) }
     # x.report { node.minimax(color: :b, max_level: 8) }
   end
 
-  node.children.each { |child| puts child.to_s }
-  ab_node.children.each { |child| puts child.to_s }
+  # node.children.each { |child| puts child.to_s }
+  # ab_node.children.each { |child| puts child.to_s }
 end

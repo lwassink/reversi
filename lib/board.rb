@@ -1,4 +1,6 @@
 class Board
+  C = (0...8).to_a
+
   GAME_START = Array.new(64)
   GAME_START[27] = :w
   GAME_START[28] = :b
@@ -20,6 +22,7 @@ class Board
 
   def initialize(state = nil)
     @grid = state || GAME_START
+    @valid_moves = { w: nil, b: nil }
   end
 
   def self.pos(coords)
@@ -55,8 +58,9 @@ class Board
   end
 
   def valid_moves(color)
-    c = (0...8).to_a
-    c.product(c).select { |coords| valid_move?(color, coords) }
+    @valid_moves[color] ||=  C.product(C).select do |coords|
+      valid_move?(color, coords)
+    end
   end
 
   def can_move?(color)
