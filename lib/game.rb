@@ -1,4 +1,6 @@
 require_relative 'human_player'
+require_relative 'ai'
+require_relative 'ab-ai'
 require_relative 'board'
 
 class Game
@@ -20,6 +22,7 @@ class Game
   private
 
   def display_state
+    system("clear")
     puts
     puts @board.to_s
     puts
@@ -50,19 +53,27 @@ class Game
   end
 
   def end_game
+    puts
+    puts @board.to_s
+    puts
     if @board.winner
       puts "Congratulations, #{@board.winner}, you win!"
     else
       puts "It's a tie!"
     end
+    puts "White: #{@board.count(:w)}, Black: #{@board.count(:b)}"
   end
 end
 
 if __FILE__ == $PROGRAM_NAME
-  player1 = HumanPlayer.new(:w)
-  player2 = HumanPlayer.new(:b)
+  player1 = ABAIPlayer.new(:w, 4)
+  player2 = ABAIPlayer.new(:b, 4)
+
+  grid = Array.new(64, :w)
+  grid[9] = :b
+  grid[0] = nil
   board = Board.new
+
   game = Game.new(player1, player2, board)
   game.run
 end
-

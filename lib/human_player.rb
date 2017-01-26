@@ -2,12 +2,6 @@ require_relative 'player'
 require_relative 'board'
 
 class HumanPlayer < Player
-  attr_reader :color
-
-  def initialize(color)
-    @color = color
-  end
-
   def get_move(board)
     move = request_move
 
@@ -16,10 +10,6 @@ class HumanPlayer < Player
     end
 
     move
-  end
-
-  def to_s
-    color == :w ? "white" : "black"
   end
 
   private
