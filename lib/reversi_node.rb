@@ -1,7 +1,32 @@
 require_relative 'board'
 require 'benchmark'
 
+ZONES = [
+  :center,
+  :outer_center,
+  :inner_edge,
+  :edge,
+  :corner
+]
+
+SCORES = {
+  center: 3,
+  outer_center: 5,
+  inner_edge: 1,
+  edge: 7,
+  corner: 10
+}
+
+POSITIONS = {
+  center: [27, 28, 35, 36],
+  outer_center: [18, 19, 20, 21, 26, 29, 34, 37, 42, 43, 44, 45],
+  inner_edge: [9, 10, 11, 12, 13, 14, 17, 22, 25, 30, 33, 38, 41, 46, 49, 50, 51, 52, 53, 54],
+  edge: [1, 2, 3, 4, 5, 6, 8, 15, 16, 23, 24, 31, 32, 39, 40, 47, 48, 55, 57, 58, 59, 60, 61, 62],
+  corner: [0, 7, 56, 63]
+}
+
 class RNode
+
   attr_reader :children
   attr_reader :parent
   attr_accessor :value
@@ -55,13 +80,14 @@ class RNode
     default_options = {
       level: 0,
       max: true,
-      alpha: -65,
-      beta: 65
+      alpha: -1000,
+      beta: 1000
     }
     options = default_options.merge(options)
 
     if (options[:level] < options[:max_level] || options[:quies]) &&
       @board.can_move?(options[:color])
+
       @board.valid_moves(options[:color]).each do |pmove|
         # create child node for possible move
         pboard = @board.dup
@@ -103,7 +129,7 @@ class RNode
       @value = options[:max] ? values.max : values.min
     else
       # value of leaf determined by leaf_value
-      @value = self.leaf_value(options[:color], options[:level])
+      @value = self.leaf_value(options[:color], options[:level], options[:max])
     end
   end
 
@@ -118,9 +144,29 @@ class RNode
     @value <=> other.value
   end
 
-  def leaf_value(color, level)
-    color = Board.other_color(color) if level.odd?
-    @board.count(color) - @board.count(Board.other_color(color))
+  def leaf_value(color, level, max)
+    # switch color if it's the other guys turn
+    # this ensures a positive score is good for the root node color
+    color = Board.other_color(color) unless max
+    oc = Board.other_color(color)
+
+    if @board.over?
+      return 0 unless @board.winner
+      return 65 if @board.winner == color
+      return -65 if @board.winner != color
+    end
+
+    val = 0
+    ZONES.each do |zone|
+      POSITIONS[zone].each do |pos|
+        if @board.grid[pos] == color
+          val += SCORES[zone]
+        elsif @board.grid[pos] == oc
+          val -= SCORES[zone]
+        end
+      end
+    end
+    val
   end
 end
 
@@ -136,6 +182,16 @@ if __FILE__ == $PROGRAM_NAME
     x.report { node.minimax(color: :b, max_level: 8) }
     # x.report { node.minimax(color: :b, max_level: 9) }
   end
+
+  # positions = []
+  # ZONES.each do |zone|
+  #   positions += POSITIONS[zone]
+  # end
+  # p positions
+  # p positions.length
+  # p positions.uniq
+  # p positions.uniq.length
+  # p (0..63).to_a - positions.uniq
 
   # node.children.each { |child| puts child.to_s }
 end

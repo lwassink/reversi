@@ -84,7 +84,7 @@ class Board
     white = grid.count(:w)
     black = grid.count(:b)
     return false if white == black
-    white > black ? "white" : "black"
+    white > black ? :w : :b
   end
 
   def over?
@@ -148,6 +148,10 @@ class Board
 
   def refresh_valid_moves
     @valid_moves = { w: nil, b: nil }
+  end
+
+  def each(&prc)
+    grid.each(&prc)
   end
 end
 

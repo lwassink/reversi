@@ -9,6 +9,7 @@ Player#get_move must return a number from 0 through 63; the position where they 
 
 # Plan:
 
+* Rethink board structure, evaluation function, etc. Map out algorithm. Plan  
 * Lazy evaluation and caching of valid_moves
   * Doubled speed
   * Caching other methods(valid_move? and captured_positions) show no improvement
@@ -16,6 +17,7 @@ Player#get_move must return a number from 0 through 63; the position where they 
   * Seems to slow things significantly. Probably from calculating valid_moves for both sides at each point
 * End the game at the correct time
   * What did I mean by this?
+  * Done!
 * High leaf_value for a winning position (and low one for a loosing position)
 * Quiescence
   * Hard to measure the effect.

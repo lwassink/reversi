@@ -67,7 +67,7 @@ class Game
 end
 
 if __FILE__ == $PROGRAM_NAME
-  # player1 = AIPlayer.new(:w, 4)
+  # player1 = HumanPlayer.new(:w)
   move_limit = 5
   player1 = AIPlayer.new(:w, move_limit)
   player2 = AIPlayer.new(:b, move_limit)
