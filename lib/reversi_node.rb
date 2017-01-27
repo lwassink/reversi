@@ -60,7 +60,7 @@ class RNode
     }
     options = default_options.merge(options)
 
-    if (options[:level] < options[:max_level]) &&
+    if (options[:level] < options[:max_level] || options[:quies]) &&
       @board.can_move?(options[:color])
       @board.valid_moves(options[:color]).each do |pmove|
         # create child node for possible move
@@ -75,17 +75,16 @@ class RNode
           alpha: options[:alpha],
           beta: options[:beta]
         }
-        child_options[:color] = Board.other_color(options[:color])
-        child_options[:max] = !options[:max]
 
         # only switch if other player can move
-        # if pboard.can_move?(Board.other_color(options[:color]))
-        #   child_options[:color] = Board.other_color(options[:color])
-        #   child_options[:max] = !options[:max]
-        # else
-        #   child_options[:color] = options[:color]
-        #   child_options[:max] = options[:max]
-        # end
+        if pboard.can_move?(Board.other_color(options[:color]))
+          child_options[:color] = Board.other_color(options[:color])
+          child_options[:max] = !options[:max]
+        else
+          child_options[:color] = options[:color]
+          child_options[:max] = options[:max]
+          child_options[:quies]
+        end
 
         child.minimax(child_options)
 
