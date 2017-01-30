@@ -155,22 +155,20 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   b = Board.new
+  Benchmark.bm do |x|
+    x.report { 5000.times { b.valid_moves(:w) } }
+  end
 
-  puts b.to_s
-  b.move(:w, [2,4])
-  puts b.to_s
 
   # Benchmark.bm do |x|
-  #   x.report { 5000.times { b.valid_moves(:w) } }
+  #   x.report do
+  #     10000.times do
+  #       t = Board.new
+  #       t.move(:w, [2,4])
+  #     end
+  #   end
   # end
-  Benchmark.bm do |x|
-    x.report do
-      10000.times do
-        t = Board.new
-        t.move(:w, [2,4])
-      end
-    end
-  end
+
   # p b.valid_moves(:w)
   # p b.valid_moves(:w).map { |pos| Board.coords(pos) }
   # p b.can_move?(:w)

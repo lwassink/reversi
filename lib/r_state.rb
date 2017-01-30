@@ -220,17 +220,18 @@ if __FILE__ == $PROGRAM_NAME
   s = RState.new
   puts s.to_s
 
-  # Benchmark.bm do |x|
-  #   x.report { 5000.times { s.valid_moves } }
-  # end
   Benchmark.bm do |x|
-    x.report do
-      10000.times do
-        t = RState.new
-        t.move(2**20)
-      end
-    end
+    x.report { 5000.times { s.valid_moves } }
   end
-  s.move(2**20)
+
+  # Benchmark.bm do |x|
+  #   x.report do
+  #     10000.times do
+  #       t = RState.new
+  #       t.move(2**20)
+  #     end
+  #   end
+  # end
+  # s.move(2**20)
   puts s.to_s
 end
