@@ -1,3 +1,5 @@
+require 'benchmark'
+
 class Board
   C = (0...8).to_a
 
@@ -58,7 +60,7 @@ class Board
   end
 
   def valid_moves(color)
-    @valid_moves[color] ||=  C.product(C).select do |coords|
+    @valid_moves[color] =  C.product(C).select do |coords|
       valid_move?(color, coords)
     end
   end
@@ -146,10 +148,6 @@ class Board
      pos1[1] + pos2[1]]
   end
 
-  def refresh_valid_moves
-    @valid_moves = { w: nil, b: nil }
-  end
-
   def each(&prc)
     grid.each(&prc)
   end
@@ -159,13 +157,27 @@ if __FILE__ == $PROGRAM_NAME
   b = Board.new
 
   puts b.to_s
-  p b.valid_moves(:w)
-  p b.valid_moves(:w).map { |pos| Board.coords(pos) }
-  p b.can_move?(:w)
-  p b.captured_positions(:w, 29)
-  p b.valid_moves(:b)
-  p b.valid_moves(:b).map { |pos| Board.coords(pos) }
-  p b.can_move?(:b)
+  b.move(:w, [2,4])
+  puts b.to_s
+
+  # Benchmark.bm do |x|
+  #   x.report { 5000.times { b.valid_moves(:w) } }
+  # end
+  Benchmark.bm do |x|
+    x.report do
+      10000.times do
+        t = Board.new
+        t.move(:w, [2,4])
+      end
+    end
+  end
+  # p b.valid_moves(:w)
+  # p b.valid_moves(:w).map { |pos| Board.coords(pos) }
+  # p b.can_move?(:w)
+  # p b.captured_positions(:w, 29)
+  # p b.valid_moves(:b)
+  # p b.valid_moves(:b).map { |pos| Board.coords(pos) }
+  # p b.can_move?(:b)
 
   # c = b.dup
   # puts b.to_s
