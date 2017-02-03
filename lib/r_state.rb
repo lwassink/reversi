@@ -13,6 +13,13 @@ L_DELTAS = [-9, -1, 7]
 # Up/down moving deltas
 UD_DELTAS = [-8, 8]
 
+# Loop over CAPTURE_DIRECTIONS to check if you would capture and which pieces
+CAPTURE_DIRECTIONS = [
+  [R_DELTAS, R_GUARD],
+  [L_DELTAS, L_GUARD],
+  [UD_DELTAS, 0]
+]
+
 # consts for calculating hamming weight
 M1  = 0x5555555555555555 # 0101...
 M2  = 0x3333333333333333 # 0101...
@@ -32,10 +39,6 @@ class RState
   end
 
   def valid_moves
-    unless (@white_positions | @black_positions) ^ (@white_positions ^ @black_positions) == 0
-      raise "Black and white positions may not overlap"
-    end
-
     return @valid_moves if @valid_moves
 
     v = 0 # valid moves
@@ -80,14 +83,20 @@ class RState
   end
 
   def capture_pieces(pos)
-    R_DELTAS.each do |delta|
+    CAPTURE_DIRECTIONS.each do |deltas, guard|
+      capture_in_direction(pos, deltas, guard)
+    end
+  end
+
+  def capture_in_direction(pos, deltas, guard)
+    deltas.each do |delta|
       i = pos << delta # translate by delta
       # stop with this delta if it's not the other color
       next unless (i & their_positions == i)
       line_to_capture = i # pices to flip
 
       # loop till you wrap or leave the board
-      until (i & B_GUARD == 0 || i & R_GUARD == i)
+      until (i & B_GUARD == 0 || i & guard == i)
         # flip if we get to our piece
         if (i & my_positions == i)
           self.their_positions = their_positions ^ line_to_capture
@@ -99,50 +108,22 @@ class RState
         i = i << delta
       end
     end
-
-    L_DELTAS.each do |delta|
-      i = pos << delta
-      next unless (i & their_positions == i)
-      line_to_capture = i
-
-      until (i & B_GUARD == 0 || i & L_GUARD == i)
-        if (i & my_positions == i)
-          self.their_positions = their_positions ^ line_to_capture
-          self.my_positions = my_positions | line_to_capture
-        end
-
-        break unless (i & their_positions == i)
-        line_to_capture = line_to_capture | i
-        i = i << delta
-      end
-    end
-
-    UD_DELTAS.each do |delta|
-      i = pos << delta
-      next unless (i & their_positions == i)
-      line_to_capture = i
-
-      until (i & B_GUARD == 0)
-        if (i & my_positions == i)
-          self.their_positions = their_positions ^ line_to_capture
-          self.my_positions = my_positions | line_to_capture
-        end
-
-        break unless (i & self.their_positions == i)
-        line_to_capture = line_to_capture | i
-        i = i << delta
-      end
-    end
   end
 
   def would_capture?(pos)
-    R_DELTAS.each do |delta|
+    CAPTURE_DIRECTIONS.any? do |deltas, guard|
+      would_capture_in_direction?(pos, deltas, guard)
+    end
+  end
+
+  def would_capture_in_direction?(pos, deltas, guard)
+    deltas.each do |delta|
       i = pos << delta # translate by delta
       # stop with this delta if it's not the other color
       next unless (i & their_positions == i)
 
       # loop till you wrap or leave the board
-      until (i & B_GUARD == 0 || i & R_GUARD == i)
+      until (i & B_GUARD == 0 || i & guard == i)
         # capture if we get to our piece
         return true if (i & my_positions == i)
         # stop looping once we finish with their pieces
@@ -150,30 +131,7 @@ class RState
         i = i << delta
       end
     end
-
-    L_DELTAS.each do |delta|
-      i = pos << delta
-      next unless (i & their_positions == i)
-
-      until (i & B_GUARD == 0 || i & L_GUARD == i)
-        return true if (i & my_positions == i)
-        break unless (i & their_positions == i)
-        i = i << delta
-      end
-    end
-
-    UD_DELTAS.each do |delta|
-      i = pos << delta
-      next unless (i & their_positions == i)
-
-      until (i & B_GUARD == 0)
-        return true if (i & my_positions == i)
-        break unless (i & their_positions == i)
-        i = i << delta
-      end
-    end
-
-    false # return false if we don't capture
+    false
   end
 
   def to_a_of_a
@@ -223,14 +181,6 @@ class RState
     x & 0x7f
   end
 
-  def my_count
-    self.class.hamming(my_positions)
-  end
-
-  def their_count
-    self.class.hamming(their_positions)
-  end
-
   def my_positions
     @current_player ? @white_positions : @black_positions
   end
@@ -256,17 +206,15 @@ if __FILE__ == $PROGRAM_NAME
     x.report { 5000.times { s.valid_moves } }
   end
 
-  # Benchmark.bm do |x|
-  #   x.report do
-  #     10000.times do
-  #       t = RState.new
-  #       t.move(2**20)
-  #     end
-  #   end
-  # end
-  # s.move(2**20)
+  Benchmark.bm do |x|
+    x.report do
+      1000.times do
+        t = RState.new
+        t.move(2**20)
+      end
+    end
+  end
+  s.move(2**20)
   puts s.to_s
   puts RState.hamming(s.valid_moves)
-  puts s.my_count
-  puts s.their_count
 end

@@ -1,4 +1,4 @@
-require_relative 'board'
+require_relative 'r_state'
 require 'benchmark'
 
 ZONES = [
@@ -30,12 +30,12 @@ class RNode
   attr_reader :children
   attr_reader :parent
   attr_accessor :value
-  attr_accessor :board
+  attr_accessor :state
 
   include Comparable
 
-  def initialize(board = nil, value = 0)
-    @board = board
+  def initialize(state = nil, value = 0)
+    @state = state
     @value = value
     @parent = nil
     @children = []
@@ -55,27 +55,6 @@ class RNode
     others.each { |other| other.parent = self }
   end
 
-  def po
-    @children.each { |child| child.post_order }
-
-    yield(self)
-  end
-
-  def df
-    yield(self)
-
-    @children.each { |child| child.dfs }
-  end
-
-  def bf
-    queue = [self]
-    until queue.empty?
-      node = queue.shift
-      yield(node)
-      queue += node.children
-    end
-  end
-
   def minimax(options)
     default_options = {
       level: 0,
@@ -86,13 +65,13 @@ class RNode
     options = default_options.merge(options)
 
     if (options[:level] < options[:max_level] || options[:quies]) &&
-      @board.can_move?(options[:color])
+      @state.can_move?(options[:color])
 
-      @board.valid_moves(options[:color]).each do |pmove|
+      @state.valid_moves(options[:color]).each do |pmove|
         # create child node for possible move
-        pboard = @board.dup
-        pboard.move(options[:color], pmove)
-        child = RNode.new(pboard)
+        pstate = @state.dup
+        pstate.move(options[:color], pmove)
+        child = RNode.new(pstate)
         self.add_child(child)
 
         child_options = {
@@ -103,7 +82,7 @@ class RNode
         }
 
         # only switch if other player can move
-        if pboard.can_move?(Board.other_color(options[:color]))
+        if pstate.can_move?(Board.other_color(options[:color]))
           child_options[:color] = Board.other_color(options[:color])
           child_options[:max] = !options[:max]
         else
@@ -136,7 +115,7 @@ class RNode
   def to_s
     puts
     puts "Value: #{@value}"
-    puts @board.to_s
+    puts @state.to_s
     puts
   end
 
@@ -150,18 +129,18 @@ class RNode
     color = Board.other_color(color) unless max
     oc = Board.other_color(color)
 
-    if @board.over?
-      return 0 unless @board.winner
-      return 65 if @board.winner == color
-      return -65 if @board.winner != color
+    if @state.over?
+      return 0 unless @state.winner
+      return 65 if @state.winner == color
+      return -65 if @state.winner != color
     end
 
     val = 0
     ZONES.each do |zone|
       POSITIONS[zone].each do |pos|
-        if @board.grid[pos] == color
+        if @state.grid[pos] == color
           val += SCORES[zone]
-        elsif @board.grid[pos] == oc
+        elsif @state.grid[pos] == oc
           val -= SCORES[zone]
         end
       end
@@ -171,9 +150,9 @@ class RNode
 end
 
 if __FILE__ == $PROGRAM_NAME
-  board = Board.new
-  board.move(:w, [2, 4])
-  node = RNode.new(board)
+  state = Board.new
+  state.move(:w, [2, 4])
+  node = RNode.new(state)
 
   Benchmark.bm do |x|
     x.report { node.minimax(color: :b, max_level: 5) }
