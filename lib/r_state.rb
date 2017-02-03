@@ -13,6 +13,11 @@ L_DELTAS = [-9, -1, 7]
 # Up/down moving deltas
 UD_DELTAS = [-8, 8]
 
+# consts for calculating hamming weight
+M1  = 0x5555555555555555 # 0101...
+M2  = 0x3333333333333333 # 0101...
+M4  = 0x0F0F0F0F0F0F0F0F # 0101...
+
 require 'benchmark'
 require 'byebug'
 
@@ -63,6 +68,15 @@ class RState
 
   def current_player
     @current_player ? :w : :b
+  end
+
+  # the leaf evaulation function
+  def evaluate(player) # true for white player, false for black
+    if player
+      RState.hamming(@white_positions) - RState.hamming(@black_positions)
+    else
+      RState.hamming(@white_positions) - RState.hamming(@black_positions)
+    end
   end
 
   def capture_pieces(pos)
@@ -199,6 +213,24 @@ class RState
     print_string
   end
 
+  def self.hamming(x)
+    x -= (x >> 1) & M1             # put count of each 2 bits into those 2 bits
+    x = (x & M2) + ((x >> 2) & M2) # put count of each 4 bits into those 4 bits
+    x = (x + (x >> 4)) & M4        # put count of each 8 bits into those 8 bits
+    x += x >>  8  # put count of each 16 bits into their lowest 8 bits
+    x += x >> 16  # put count of each 32 bits into their lowest 8 bits
+    x += x >> 32  # put count of each 64 bits into their lowest 8 bits
+    x & 0x7f
+  end
+
+  def my_count
+    self.class.hamming(my_positions)
+  end
+
+  def their_count
+    self.class.hamming(their_positions)
+  end
+
   def my_positions
     @current_player ? @white_positions : @black_positions
   end
@@ -234,4 +266,7 @@ if __FILE__ == $PROGRAM_NAME
   # end
   # s.move(2**20)
   puts s.to_s
+  puts RState.hamming(s.valid_moves)
+  puts s.my_count
+  puts s.their_count
 end
