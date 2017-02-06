@@ -86,12 +86,16 @@ class RState
   end
 
   # the leaf evaulation function
-  def evaluate(player) # true for white player, false for black
+  def count_evaluate(player) # true for white player, false for black
     if player
       RState.hamming(@white_positions) - RState.hamming(@black_positions)
     else
-      RState.hamming(@white_positions) - RState.hamming(@black_positions)
+      RState.hamming(@black_positions) - RState.hamming(@white_positions)
     end
+  end
+
+  # weighted evaluation function
+  def weighted_evaluate(player)
   end
 
   def capture_pieces(pos)
@@ -213,6 +217,19 @@ class RState
     arr
   end
 
+  def self.parse_board(board, current_player)
+    options = {
+      current_player: current_player == :w
+      white_positions: 0,
+      black_positions: 0
+    }
+    board.grid.each_with_index do |el, idx|
+      options[:white_positions] += 2**idx if el == :w
+      options[:black_positions] += 2**idx if el == :b
+    end
+    self.new(options)
+  end
+
   def my_positions
     @current_player ? @white_positions : @black_positions
   end
@@ -242,8 +259,11 @@ end
 if __FILE__ == $PROGRAM_NAME
   s = RState.new
   puts s.to_s
+  puts s.evaluate(true)
   s.move(2**20)
   puts s.to_s
+  puts s.evaluate(true)
   s.move(2**21)
   puts s.to_s
+  puts s.evaluate(true)
 end

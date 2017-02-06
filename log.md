@@ -97,3 +97,26 @@ user     system      total        real
 1.750000   0.020000   1.770000 (  1.807364)
 5.570000   0.070000   5.640000 (  5.777553)
 17.490000   0.150000  17.640000 ( 18.236735)
+
+### 2/6/17
+-- Now with RState and alpha-beta pruning and basic quiescence. Test code:
+def minimax_test(max_level)
+  state = RState.new
+  node = RNode.new(state)
+  node.minimax(white: true, max_level: max_level)
+end
+
+Benchmark.bm do |x|
+  x.report { minimax_test(5) }
+  x.report { minimax_test(6) }
+  x.report { minimax_test(7) }
+  x.report { minimax_test(8) }
+  x.report { minimax_test(9) }
+end
+-- Results:
+user     system      total        real
+0.050000   0.000000   0.050000 (  0.060084)
+0.240000   0.010000   0.250000 (  0.235813)
+0.440000   0.000000   0.440000 (  0.455991)
+1.960000   0.010000   1.970000 (  1.996421)
+4.390000   0.030000   4.420000 (  4.468009)

@@ -67,7 +67,6 @@ class RNode
     @level = options[:level]
 
     if (options[:level] < options[:max_level]) && @state.can_move?
-      puts "Number of moves: #{RState.bit_array(@state.valid_moves).length}"
       RState.bit_array(@state.valid_moves).each do |move|
         # create child node for possible move
         cstate = @state.dup
@@ -94,7 +93,7 @@ class RNode
       @value = options[:max] ? values.max : values.min
     else
       # value of leaf determined by evaluation function
-      @value = @state.evaluate(options[:white])
+      @value = @state.count_evaluate(options[:white])
     end
   end
 
@@ -120,22 +119,23 @@ class RNode
 end
 
 
-
 if __FILE__ == $PROGRAM_NAME
-  state = RState.new
-  puts state.to_s
-  state.move(2**20)
-  puts state.to_s
-  node = RNode.new(state)
 
-  node.minimax(white: false, max_level: 1)
+  def minimax_test(max_level)
+    state = RState.new
+    node = RNode.new(state)
+    node.minimax(white: true, max_level: max_level)
+  end
 
-  node.level_order { |n| puts n.level; puts n.to_s }
+  # node.minimax(white: true, max_level: 1)
 
-  # Benchmark.bm do |x|
-  #   x.report { node.minimax(white: false, max_level: 1) }
-  #   x.report { node.minimax(white: false, max_level: 2) }
-  #   x.report { node.minimax(white: false, max_level: 7) }
-  #   x.report { node.minimax(white: false, max_level: 8) }
-  # end
+  # node.level_order { |n| puts n.level; puts n.to_s }
+
+  Benchmark.bm do |x|
+    x.report { minimax_test(5) }
+    x.report { minimax_test(6) }
+    x.report { minimax_test(7) }
+    x.report { minimax_test(8) }
+    x.report { minimax_test(9) }
+  end
 end

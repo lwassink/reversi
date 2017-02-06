@@ -9,8 +9,8 @@ class AIPlayer < Player
   end
 
   def get_move(board)
-    root = RNode.new(board)
-    root.minimax(color: @color, max_level: @max_level)
+    root = RNode.new(RState.parse_board(board))
+    root.minimax(white: @color == :w, max_level: @max_level)
     board.valid_moves(@color)[pick_child(root)]
   end
 
