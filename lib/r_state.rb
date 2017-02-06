@@ -219,7 +219,7 @@ class RState
 
   def self.parse_board(board, current_player)
     options = {
-      current_player: current_player == :w
+      current_player: current_player,
       white_positions: 0,
       black_positions: 0
     }

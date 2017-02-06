@@ -34,7 +34,6 @@ class Game
     pos = current_player.get_move(@board)
     @board.move(current_player.color, pos)
     switch_players! if @board.can_move?(other_player.color)
-    @board.refresh_valid_moves
   end
 
   def current_player
@@ -73,8 +72,6 @@ if __FILE__ == $PROGRAM_NAME
   player2 = AIPlayer.new(:b, move_limit)
 
   grid = Array.new(64, :w)
-  grid[9] = :b
-  grid[0] = nil
   board = Board.new
 
   game = Game.new(player1, player2, board)
