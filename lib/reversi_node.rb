@@ -1,4 +1,5 @@
 require_relative 'r_state'
+require_relative 'board'
 require 'benchmark'
 
 ZONES = [
@@ -26,9 +27,9 @@ POSITIONS = {
 }
 
 class RNode
-
   attr_reader :children
   attr_reader :parent
+  attr_reader :level
   attr_accessor :value
   attr_accessor :state
 
@@ -63,43 +64,28 @@ class RNode
       beta: 1000
     }
     options = default_options.merge(options)
+    @level = options[:level]
 
-    if (options[:level] < options[:max_level] || options[:quies]) &&
-      @state.can_move?(options[:color])
-
-      @state.valid_moves(options[:color]).each do |pmove|
+    if (options[:level] < options[:max_level]) && @state.can_move?
+      puts "Number of moves: #{RState.bit_array(@state.valid_moves).length}"
+      RState.bit_array(@state.valid_moves).each do |move|
         # create child node for possible move
-        pstate = @state.dup
-        pstate.move(options[:color], pmove)
-        child = RNode.new(pstate)
+        cstate = @state.dup
+        cstate.move(move)
+        switch = cstate.can_move? # if true, other player can move
+
+        child_options = {}.merge(options)
+        child_options[:level] += 1
+
+        # cstate.switch_players! unless switch
+        child_options[:max] = !child_options[:max] if switch
+
+        child = RNode.new(cstate)
         self.add_child(child)
-
-        child_options = {
-          level: options[:level] + 1,
-          max_level: options[:max_level],
-          alpha: options[:alpha],
-          beta: options[:beta]
-        }
-
-        # only switch if other player can move
-        if pstate.can_move?(Board.other_color(options[:color]))
-          child_options[:color] = Board.other_color(options[:color])
-          child_options[:max] = !options[:max]
-        else
-          child_options[:color] = options[:color]
-          child_options[:max] = options[:max]
-          child_options[:quies]
-        end
-
         child.minimax(child_options)
 
-        # update alpha or beta based on child values
-        if options[:max]
-          options[:alpha] = [options[:alpha], child.value].max
-        else
-          options[:beta] = [options[:beta], child.value].min
-        end
-
+        options[:alpha] = [options[:alpha], child.value].max if options[:max]
+        options[:beta] = [options[:beta], child.value].min if !options[:max]
         break if options[:alpha] >= options[:beta]
       end
 
@@ -107,8 +93,17 @@ class RNode
       values = @children.map(&:value)
       @value = options[:max] ? values.max : values.min
     else
-      # value of leaf determined by leaf_value
-      @value = self.leaf_value(options[:color], options[:level], options[:max])
+      # value of leaf determined by evaluation function
+      @value = @state.evaluate(options[:white])
+    end
+  end
+
+  def level_order(&blk)
+    queue = [self]
+    until queue.empty?
+      node = queue.pop
+      blk.call(node)
+      queue += node.children
     end
   end
 
@@ -122,55 +117,25 @@ class RNode
   def <=>(other)
     @value <=> other.value
   end
-
-  def leaf_value(color, level, max)
-    # switch color if it's the other guys turn
-    # this ensures a positive score is good for the root node color
-    color = Board.other_color(color) unless max
-    oc = Board.other_color(color)
-
-    if @state.over?
-      return 0 unless @state.winner
-      return 65 if @state.winner == color
-      return -65 if @state.winner != color
-    end
-
-    val = 0
-    ZONES.each do |zone|
-      POSITIONS[zone].each do |pos|
-        if @state.grid[pos] == color
-          val += SCORES[zone]
-        elsif @state.grid[pos] == oc
-          val -= SCORES[zone]
-        end
-      end
-    end
-    val
-  end
 end
 
+
+
 if __FILE__ == $PROGRAM_NAME
-  state = Board.new
-  state.move(:w, [2, 4])
+  state = RState.new
+  puts state.to_s
+  state.move(2**20)
+  puts state.to_s
   node = RNode.new(state)
 
-  Benchmark.bm do |x|
-    x.report { node.minimax(color: :b, max_level: 5) }
-    x.report { node.minimax(color: :b, max_level: 6) }
-    x.report { node.minimax(color: :b, max_level: 7) }
-    x.report { node.minimax(color: :b, max_level: 8) }
-    # x.report { node.minimax(color: :b, max_level: 9) }
-  end
+  node.minimax(white: false, max_level: 1)
 
-  # positions = []
-  # ZONES.each do |zone|
-  #   positions += POSITIONS[zone]
+  node.level_order { |n| puts n.level; puts n.to_s }
+
+  # Benchmark.bm do |x|
+  #   x.report { node.minimax(white: false, max_level: 1) }
+  #   x.report { node.minimax(white: false, max_level: 2) }
+  #   x.report { node.minimax(white: false, max_level: 7) }
+  #   x.report { node.minimax(white: false, max_level: 8) }
   # end
-  # p positions
-  # p positions.length
-  # p positions.uniq
-  # p positions.uniq.length
-  # p (0..63).to_a - positions.uniq
-
-  # node.children.each { |child| puts child.to_s }
 end

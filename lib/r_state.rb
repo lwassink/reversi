@@ -31,11 +31,22 @@ require 'byebug'
 class RState
   attr_writer :valid_moves
 
-  def initialize
-    @current_player = true # true for white, false for black
-    @white_positions = 2**27 + 2**36
-    @black_positions = 2**28 + 2**35
-    @valid_moves = nil # 2**20 + 2**29 + 2**34 + 2**43
+  def initialize(options = {})
+    default_options = {
+      current_player: true,
+      white_positions: 2**27 + 2**36,
+      black_positions: 2**28 + 2**35
+    }
+    options = default_options.merge(options)
+
+    @current_player = options[:current_player]
+    @white_positions = options[:white_positions]
+    @black_positions = options[:black_positions]
+    @valid_moves = options[:valid_moves]
+  end
+
+  def can_move?
+    valid_moves > 0
   end
 
   def valid_moves
@@ -62,6 +73,7 @@ class RState
     @valid_moves = nil # reset valid moves
     self.my_positions = my_positions | pos # place a pice
     capture_pieces(pos)
+    switch_players!
   end
 
   def switch_players!
@@ -134,6 +146,16 @@ class RState
     false
   end
 
+  def dup
+    options = {
+      current_player: @current_player,
+      white_positions: @white_positions,
+      black_positions: @black_positions,
+      valid_moves: @valid_moves
+    }
+    RState.new(options)
+  end
+
   def to_a_of_a
     white_positions = @white_positions
     black_positions = @black_positions
@@ -181,6 +203,16 @@ class RState
     x & 0x7f
   end
 
+  def self.bit_array(num)
+    i = 1
+    arr = []
+    64.times do
+      arr << i if (i & num > 0)
+      i = i << 1
+    end
+    arr
+  end
+
   def my_positions
     @current_player ? @white_positions : @black_positions
   end
@@ -196,25 +228,22 @@ class RState
   def their_positions=(value)
     @current_player ? @black_positions = value : @white_positions = value
   end
+
+  def test
+    puts "Testing..."
+    puts "Black and white positions are overlapping" if overlap
+  end
+
+  def overlap
+    @black_positions & @white_positions > 0
+  end
 end
 
 if __FILE__ == $PROGRAM_NAME
   s = RState.new
   puts s.to_s
-
-  Benchmark.bm do |x|
-    x.report { 5000.times { s.valid_moves } }
-  end
-
-  Benchmark.bm do |x|
-    x.report do
-      1000.times do
-        t = RState.new
-        t.move(2**20)
-      end
-    end
-  end
   s.move(2**20)
   puts s.to_s
-  puts RState.hamming(s.valid_moves)
+  s.move(2**21)
+  puts s.to_s
 end
